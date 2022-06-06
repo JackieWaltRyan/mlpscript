@@ -1,17 +1,14 @@
-import os
+from os import getcwd, walk, remove
+from os.path import join
 
 if __name__ == "__main__":
-    path = os.getcwd()
-    for root, dirs, files in os.walk(path):
+    for root, dirs, files in walk(getcwd()):
         for file in files:
             if file.endswith(".loc"):
-                filename = os.path.join(root, file)
-                print("Конвертируем", filename)
-                with open(filename, "rb") as fhr:
-                    data = fhr.read()
-                    datapointer = 4
-                    asciiOrUTF = 1
-                    output = ''
+                filename = join(root, file)
+                print(f"Конвертируем: {filename}")
+                with open(filename, "rb") as f:
+                    data, datapointer, asciiOrUTF, output = f.read(), 4, 1, ""
                     while datapointer < len(data):
                         symcount = data[datapointer:datapointer + 4]
                         symcount = int.from_bytes(symcount, byteorder="little")
@@ -23,15 +20,14 @@ if __name__ == "__main__":
                             asciiOrUTF = 2
                         else:
                             tmp = tmp.decode("utf-16-le")
-                            if tmp.endswith('\n'):
+                            if tmp.endswith("\n"):
                                 tmp = tmp[:-1]
                             if len(tmp) > 0:
-                                output += "=" + tmp + '\n'
+                                output += "=" + tmp + "\n"
                             else:
-                                output += '\n'
+                                output += "\n"
                             datapointer += symcount * asciiOrUTF
                             asciiOrUTF = 1
-
                 with open(filename[:-4] + ".txt", "wt", encoding="utf-8") as fhw:
                     fhw.write(output[:-1])
-                    os.remove(filename)
+                    remove(filename)
